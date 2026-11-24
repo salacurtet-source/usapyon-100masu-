@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>うさぴょん100マス計算</title>
+<meta name="theme-color" content="#fdf3e1">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="うさぴょん">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fdf3e1; --card:#fffaf0; --ink:#5b4636; --sub:#9a8270; --line:#ead7bb;
+  --pink:#f7a8c4; --sky:#9fd3ec; --mint:#9fdcbf; --lav:#c9b6e4; --yel:#ffe08a;
+  --ok:#d3f3df; --okink:#2f8a5b; --ng:#ffd3de; --ngink:#d2456b; --cur:#fff0a0;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{
+  font-family:'M PLUS Rounded 1c','Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic',sans-serif;
+  color:var(--ink); background:var(--bg);
+  background-image:radial-gradient(#f4e3c6 1.4px,transparent 1.6px);
+  background-size:22px 22px; touch-action:manipulation; -webkit-user-select:none; user-select:none;
+}
+button{font-family:inherit;color:inherit;border:none;cursor:pointer;touch-action:manipulation}
+.hidden{display:none!important}
+
+/* ---------- menu ---------- */
+#menu{max-width:520px;margin:0 auto;padding:18px 16px calc(28px + env(safe-area-inset-bottom))}
+.hero{display:flex;align-items:flex-end;gap:10px;margin-top:6px}
+.hero .bun{width:108px;flex:none}
+.bubble{word-break:keep-all;overflow-wrap:anywhere;position:relative;background:#fff;border:3px solid var(--ink);border-radius:18px;padding:10px 14px;font-weight:700;font-size:15px;line-height:1.5;margin-bottom:26px}
+.bubble:after{content:"";position:absolute;left:-12px;bottom:14px;border:8px solid transparent;border-right-color:var(--ink)}
+.bubble:before{content:"";position:absolute;left:-7px;bottom:15px;border:7px solid transparent;border-right-color:#fff;z-index:1}
+h1{font-size:26px;line-height:1.25;margin:10px 0 2px;font-weight:800;letter-spacing:.02em}
+h1 small{display:block;font-size:14px;color:var(--sub);font-weight:700}
+.ops{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+.opbtn{background:var(--c);border-radius:22px;padding:14px 8px 12px;display:flex;flex-direction:column;align-items:center;gap:2px;
+  box-shadow:0 5px 0 rgba(91,70,54,.25);border:3px solid var(--ink);transition:transform .08s}
+.opbtn:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(91,70,54,.25)}
+.opbtn .sym{font-size:40px;font-weight:800;line-height:1}
+.opbtn .lb{font-size:19px;font-weight:800}
+.opbtn .bt{font-size:12px;font-weight:700;background:rgba(255,255,255,.7);border-radius:99px;padding:2px 10px;margin-top:4px}
+.panel{background:var(--card);border:3px solid var(--line);border-radius:20px;padding:12px 14px;margin-top:12px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0}
+.row+.row{border-top:2px dashed var(--line)}
+.row .t{font-weight:800;font-size:15px}
+.row .d{word-break:keep-all;overflow-wrap:anywhere;font-size:12px;color:var(--sub);font-weight:700}
+.seg{display:flex;background:#f1e4cf;border-radius:99px;padding:3px;flex:none}
+.seg button{background:transparent;border-radius:99px;padding:7px 12px;font-weight:800;font-size:14px;color:var(--sub)}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 2px 0 rgba(91,70,54,.15)}
+.stamps{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin-top:8px}
+.stamps span{aspect-ratio:1;border-radius:50%;border:2px dashed var(--line);display:grid;place-items:center;font-size:16px}
+.stamps span.got{border:2px solid var(--pink);background:#fff}
+.hist{margin:6px 0 0;padding:0;list-style:none;font-size:13px;font-weight:700}
+.hist li{display:flex;justify-content:space-between;padding:3px 0;color:var(--sub)}
+.hist li b{color:var(--ink)}
+.foot{text-align:center;font-size:12px;color:var(--sub);margin-top:18px;font-weight:700}
+
+/* ---------- game ---------- */
+#game{height:100dvh;display:flex;flex-direction:column;max-width:560px;margin:0 auto}
+.top{display:flex;align-items:center;gap:8px;padding:calc(8px + env(safe-area-inset-top)) 10px 6px}
+.iconbtn{background:#fff;border:3px solid var(--ink);border-radius:14px;padding:5px 10px;font-weight:800;font-size:14px}
+.chip{background:var(--c);border:3px solid var(--ink);border-radius:99px;padding:4px 12px;font-weight:800;font-size:15px}
+.timer{margin-left:auto;font-weight:800;font-size:20px;font-variant-numeric:tabular-nums;background:#fff;border-radius:12px;padding:3px 10px;border:3px solid var(--line)}
+.prog{font-weight:800;font-size:13px;color:var(--sub)}
+.qbar{display:flex;align-items:center;gap:8px;margin:2px 10px 6px;background:#fff;border:3px solid var(--ink);border-radius:18px;padding:4px 8px 4px 4px;position:relative}
+.qbar .bun{width:50px;flex:none}
+.qtext{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.qans{min-width:62px;text-align:center;font-size:28px;font-weight:800;border-bottom:4px solid var(--pink);font-variant-numeric:tabular-nums}
+.qans.empty{color:#d9c7ae}
+.hintbtn{margin-left:auto;background:var(--yel);border:3px solid var(--ink);border-radius:12px;padding:5px 9px;font-weight:800;font-size:13px;flex:none}
+.say{position:absolute;left:56px;bottom:-16px;background:var(--ink);color:#fff;font-weight:800;font-size:13px;padding:5px 11px;border-radius:99px;
+  white-space:nowrap;opacity:0;transform:translateY(6px);transition:.2s;pointer-events:none;z-index:5}
+.say.show{opacity:1;transform:none}
+.gridwrap{flex:1;overflow:auto;padding:2px 8px 8px;display:flex;align-items:flex-start}
+.grid{margin:0 auto;--cs:min(calc((min(100vw, 560px) - 34px) / var(--n)), 50px);display:grid;grid-template-columns:repeat(var(--n),var(--cs));grid-auto-rows:var(--cs);
+  background:var(--ink);gap:1px;border:3px solid var(--ink);border-radius:10px;overflow:hidden}
+.grid.big{--cs:min(calc((min(100vw, 560px) - 34px) / var(--n)), 64px)}
+.grid>div{display:grid;place-items:center;font-weight:800;font-variant-numeric:tabular-nums;position:relative;font-size:calc(var(--cs) * .46)}
+.hd{background:#f6e7cd}
+.hd.top-h.on,.hd.left-h.on{background:var(--yel)}
+.hd.corner{background:var(--c);font-size:calc(var(--cs) * .6)!important}
+.hd.top-h.div{font-size:calc(var(--cs) * .36)}
+.cell{background:#fff;cursor:pointer}
+.cell .dv{position:absolute;top:1px;left:2px;font-size:calc(var(--cs) * .27);color:#b49c85;font-weight:700;line-height:1}
+.cell.cur{background:var(--cur);box-shadow:inset 0 0 0 3px #f0b400}
+.cell.ok{background:var(--ok);color:var(--okink)}
+.cell.ok.miss{background:#fde8c8;color:#b06a00}
+.cell.ng{background:var(--ng);color:var(--ngink)}
+.cell.ng .v{text-decoration:line-through;text-decoration-thickness:2px;font-size:.8em}
+.cell .fix{position:absolute;right:2px;bottom:0;font-size:calc(var(--cs) * .3);color:var(--okink);line-height:1.1}
+.cell.filled{color:#4f6fae}
+.shake{animation:shake .35s}
+@keyframes shake{20%{transform:translateX(-4px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+.hop{animation:hop .35s}
+@keyframes hop{40%{transform:translateY(-9px) scale(1.04)}}
+.pad{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;padding:6px 8px calc(8px + env(safe-area-inset-bottom));background:#f6e7cd;border-top:3px solid var(--line)}
+.pad button{background:#fff;border:3px solid var(--ink);border-radius:14px;font-size:26px;font-weight:800;height:54px;box-shadow:0 3px 0 rgba(91,70,54,.25)}
+.pad button:active{transform:translateY(3px);box-shadow:none}
+.pad .del{background:#ffe4ea;font-size:15px}
+.pad .ent{background:var(--mint);font-size:22px}
+.pad.done{grid-template-columns:1fr 1fr 1fr}
+.pad.done button{font-size:15px;height:50px}
+
+/* ---------- modal ---------- */
+.modal{position:fixed;inset:0;background:rgba(91,70,54,.45);display:grid;place-items:center;padding:20px;z-index:50}
+.sheet{background:var(--card);border:4px solid var(--ink);border-radius:26px;padding:18px 18px 16px;width:min(100%,380px);text-align:center;
+  animation:pop .3s cubic-bezier(.2,1.4,.5,1)}
+@keyframes pop{from{transform:scale(.8);opacity:0}}
+.sheet .bun{width:96px;margin:-62px auto 0;display:block}
+.sheet h2{margin:6px 0 8px;font-size:22px;font-weight:800}
+.sheet p{word-break:keep-all;overflow-wrap:anywhere;margin:6px 0;font-weight:700;line-height:1.6}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.stats div{background:#fff;border:2px solid var(--line);border-radius:14px;padding:8px 4px}
+.stats small{display:block;font-size:12px;color:var(--sub);font-weight:700}
+.stats b{font-size:22px;font-variant-numeric:tabular-nums}
+.newbest{display:inline-block;background:var(--pink);color:#fff;border-radius:99px;padding:3px 12px;font-weight:800;font-size:14px;margin:2px 0 6px}
+.btns{display:grid;gap:8px;margin-top:10px}
+.btn{border:3px solid var(--ink);border-radius:16px;padding:11px;font-weight:800;font-size:16px;background:#fff;box-shadow:0 3px 0 rgba(91,70,54,.25)}
+.btn.main{background:var(--mint)}
+.btn.pinkb{background:var(--pink)}
+.hanamaru{width:120px;margin:0 auto -6px;display:block}
+</style>
+</head>
+<body>
+
+<!-- ================= MENU ================= -->
+<section id="menu">
+  <div class="hero">
+    <div class="bun" id="heroBun"></div>
+    <div class="bubble" id="heroMsg">ちーちゃん、きょうは どれにする？</div>
+  </div>
+  <h1>うさぴょん100マス計算<small>ちーちゃんの けいさん れんしゅう帳</small></h1>
+
+  <div class="ops" id="ops"></div>
+
+  <div class="panel">
+    <div class="row">
+      <div><div class="t">マスの数</div><div class="d">25マスは 5×5 の おためし版</div></div>
+      <div class="seg" id="segSize"><button data-v="10">100マス</button><button data-v="5">25マス</button></div>
+    </div>
+    <div class="row">
+      <div><div class="t">すぐ丸つけ</div><div class="d">ON：1問ずつ その場で答え合わせ<br>OFF：ぜんぶ書いてから まとめて丸つけ</div></div>
+      <div class="seg" id="segInstant"><button data-v="1">ON</button><button data-v="0">OFF</button></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="row" style="padding-bottom:0">
+      <div class="t">にんじんスタンプ 🥕</div>
+      <div class="d" id="playCount"></div>
+    </div>
+    <div class="stamps" id="stamps"></div>
+    <ul class="hist" id="hist"></ul>
+  </div>
+  <div class="foot">ノーミスで さいごまで できたら ベスト記録になるよ</div>
+</section>
+
+<!-- ================= GAME ================= -->
+<section id="game" class="hidden">
+  <div class="top">
+    <button class="iconbtn" id="backBtn">◀ もどる</button>
+    <span class="chip" id="opChip"></span>
+    <span class="prog" id="prog"></span>
+    <span class="timer" id="timer">0:00.0</span>
+  </div>
+  <div class="qbar">
+    <div class="bun" id="gameBun"></div>
+    <span class="qtext" id="qtext"></span>
+    <span class="qans" id="qans"></span>
+    <button class="hintbtn" id="hintBtn">💡ヒント</button>
+    <div class="say" id="say"></div>
+  </div>
+  <div class="gridwrap"><div class="grid" id="grid"></div></div>
+  <div class="pad" id="pad"></div>
+</section>
+
+<div id="modalRoot"></div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const KEY = 'usapyon100:v1';
+
+/* ---------- うさぴょん（オリジナルキャラ） ---------- */
+function bunny(mood = 'normal') {
+  const eyes = mood === 'happy'
+    ? `<path d="M40 79 q6 -8 12 0 M68 79 q6 -8 12 0" fill="none" stroke="#4a3728" stroke-width="4" stroke-linecap="round"/>`
+    : `<circle cx="46" cy="78" r="5.2" fill="#4a3728"/><circle cx="74" cy="78" r="5.2" fill="#4a3728"/>
+       <circle cx="47.8" cy="76" r="1.8" fill="#fff"/><circle cx="75.8" cy="76" r="1.8" fill="#fff"/>`;
+  const mouth = mood === 'happy'
+    ? `<path d="M53 89 q7 9 14 0 z" fill="#e8708f" stroke="#4a3728" stroke-width="2.5" stroke-linejoin="round"/>`
+    : `<path d="M60 88 q-4 5 -8 2 M60 88 q4 5 8 2" fill="none" stroke="#4a3728" stroke-width="2.5" stroke-linecap="round"/>`;
+  return `<svg viewBox="0 0 120 124" xmlns="http://www.w3.org/2000/svg" aria-label="うさぴょん">
+    <g stroke="#5b4636" stroke-width="3.5">
+      <ellipse cx="42" cy="32" rx="12" ry="29" fill="#fff" transform="rotate(-12 42 32)"/>
+      <ellipse cx="80" cy="32" rx="12" ry="29" fill="#fff" transform="rotate(14 80 32)"/>
+    </g>
+    <ellipse cx="42" cy="34" rx="5.5" ry="19" fill="#f9b8cc" transform="rotate(-12 42 34)"/>
+    <ellipse cx="80" cy="34" rx="5.5" ry="19" fill="#f9b8cc" transform="rotate(14 80 34)"/>
+    <ellipse cx="60" cy="82" rx="42" ry="35" fill="#fff" stroke="#5b4636" stroke-width="3.5"/>
+    <g transform="translate(88 50)">
+      <circle cx="0" cy="-6" r="5" fill="#ffd166"/><circle cx="6" cy="-1" r="5" fill="#ffd166"/>
+      <circle cx="3" cy="6" r="5" fill="#ffd166"/><circle cx="-4" cy="5" r="5" fill="#ffd166"/>
+      <circle cx="-6" cy="-1" r="5" fill="#ffd166"/><circle cx="0" cy="0" r="3.6" fill="#f28c38"/>
+    </g>
+    ${eyes}
+    <ellipse cx="36" cy="90" rx="8" ry="5" fill="#f7a8c4" opacity=".75"/>
+    <ellipse cx="84" cy="90" rx="8" ry="5" fill="#f7a8c4" opacity=".75"/>
+    <ellipse cx="60" cy="85" rx="3.6" ry="2.6" fill="#ef7f9f"/>
+    ${mouth}
+  </svg>`;
+}
+const HANAMARU = `<svg class="hanamaru" viewBox="0 0 140 120" xmlns="http://www.w3.org/2000/svg">
+  <g fill="none" stroke="#e8506a" stroke-width="5" stroke-linecap="round">
+    <ellipse cx="70" cy="62" rx="22" ry="18" transform="rotate(-8 70 62)"/>
+    <path d="M52 50 C40 66 58 84 78 80 C98 76 96 50 76 44 C64 40 54 44 50 50"/>
+    ${Array.from({length: 9}, (_, i) => {
+      const a = i / 9 * Math.PI * 2, cx = 70 + Math.cos(a) * 47, cy = 62 + Math.sin(a) * 38;
+      const deg = a * 180 / Math.PI + 90;
+      return `<path d="M-12 0 q12 -18 24 0" transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)}) rotate(${deg.toFixed(1)})"/>`;
+    }).join('')}
+  </g></svg>`;
+
+/* ---------- データ ---------- */
+const OPS = {
+  add: {label: 'たし算', sym: '+', color: 'var(--pink)'},
+  sub: {label: 'ひき算', sym: '−', color: 'var(--sky)'},
+  mul: {label: 'かけ算', sym: '×', color: 'var(--mint)'},
+  div: {label: 'わり算', sym: '÷', color: 'var(--lav)'},
+};
+const OK_MSG = ['いいね〜！', 'その調子ぴょん！', 'さすが ちーちゃん！', 'すらすらだね！', 'ぴょーん！せいかい！', 'かんぺき！'];
+const NG_MSG = ['おしい！もう一回ぴょん', 'だいじょうぶ、もう一回！', 'あわてなくていいよ〜', 'ヒントを見てもいいよ'];
+const HERO_MSG = ['ちーちゃん、きょうは どれにする？', '25マスから はじめても いいよ', 'まちがえても だいじょうぶぴょん', 'ちょっとずつ はやくなろうね'];
+
+function loadData() {
+  const d0 = {best: {}, plays: 0, history: [], settings: {size: 10, instant: true}};
+  try { return Object.assign(d0, JSON.parse(localStorage.getItem(KEY)) || {}); } catch (e) { return d0; }
+}
+function saveData() { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {} }
+let data = loadData();
+const settings = data.settings;
+
+const range = (a, b) => Array.from({length: b - a + 1}, (_, i) => a + i);
+const shuffle = arr => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const pick = (arr, n) => shuffle(arr).slice(0, n);
+const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const rand = arr => arr[Math.floor(Math.random() * arr.length)];
+function fmt(ms) {
+  const t = Math.max(0, ms) / 1000, m = Math.floor(t / 60), s = Math.floor(t % 60), d = Math.floor((t * 10) % 10);
+  return `${m}:${String(s).padStart(2, '0')}.${d}`;
+}
+function fmtJa(ms) {
+  const t = ms / 1000, m = Math.floor(t / 60), s = (t % 60).toFixed(1);
+  return m ? `${m}分${s}秒` : `${s}秒`;
+}
+
+/* ---------- 問題づくり ---------- */
+function makeGame(op, n) {
+  const ten = n === 10;
+  let tops, lefts;
+  if (op === 'add') { tops = ten ? shuffle(range(0, 9)) : pick(range(1, 9), n); lefts = ten ? shuffle(range(0, 9)) : pick(range(1, 9), n); }
+  if (op === 'sub') { tops = ten ? shuffle(range(0, 9)) : pick(range(1, 9), n); lefts = ten ? shuffle(range(9, 18)) : pick(range(10, 18), n); }
+  if (op === 'mul') { tops = ten ? shuffle(range(0, 9)) : pick(range(2, 9), n); lefts = ten ? shuffle(range(0, 9)) : pick(range(2, 9), n); }
+  if (op === 'div') { tops = ten ? shuffle(range(1, 10)) : pick(range(2, 9), n); lefts = range(1, n); }
+  const cells = [];
+  for (let r = 0; r < n; r++) {
+    let prevQ = 0;
+    for (let c = 0; c < n; c++) {
+      let a = lefts[r], b = tops[c], ans;
+      if (op === 'add') ans = a + b;
+      if (op === 'sub') ans = a - b;
+      if (op === 'mul') ans = a * b;
+      if (op === 'div') { let q; do { q = ri(1, 9); } while (q === prevQ); prevQ = q; a = q * b; ans = q; }
+      cells.push({r, c, a, b, ans, val: '', st: '', miss: false});
+    }
+  }
+  return {op, size: n, tops, lefts, cells, cur: 0, elapsed: 0, started: false, t0: 0, tid: 0,
+          done: false, retry: false, instant: settings.instant, combo: 0, hints: 0, els: []};
+}
+
+/* ---------- メニュー ---------- */
+function renderMenu() {
+  $('#heroBun').innerHTML = bunny('normal');
+  $('#heroMsg').textContent = rand(HERO_MSG);
+  $('#ops').innerHTML = Object.entries(OPS).map(([k, o]) => {
+    const b = data.best[`${k}-${settings.size}`];
+    return `<button class="opbtn" data-op="${k}" style="--c:${o.color}">
+      <span class="sym">${o.sym}</span><span class="lb">${o.label}</span>
+      <span class="bt">${b ? '🏆 ' + fmt(b) : 'まだ記録なし'}</span></button>`;
+  }).join('');
+  document.querySelectorAll('#segSize button').forEach(b => b.classList.toggle('on', +b.dataset.v === settings.size));
+  document.querySelectorAll('#segInstant button').forEach(b => b.classList.toggle('on', (b.dataset.v === '1') === settings.instant));
+  const p = data.plays, onCard = p === 0 ? 0 : (p % 10 || 10);
+  $('#playCount').textContent = `これまで ${p}回 がんばった`;
+  $('#stamps').innerHTML = range(1, 10).map(i => `<span class="${i <= onCard ? 'got' : ''}">${i <= onCard ? '🥕' : ''}</span>`).join('');
+  $('#hist').innerHTML = data.history.slice(0, 5).map(h => {
+    const dt = new Date(h.date);
+    return `<li><span>${dt.getMonth() + 1}/${dt.getDate()} ${OPS[h.op].label} ${h.size * h.size}マス</span><b>${h.ok}/${h.total}　${fmt(h.time)}</b></li>`;
+  }).join('');
+}
+$('#ops').addEventListener('click', e => { const b = e.target.closest('.opbtn'); if (b) startGame(b.dataset.op); });
+$('#segSize').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; settings.size = +b.dataset.v; saveData(); renderMenu(); });
+$('#segInstant').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; settings.instant = b.dataset.v === '1'; saveData(); renderMenu(); });
+
+/* ---------- ゲーム ---------- */
+let G = null;
+
+function startGame(op) {
+  if (G) clearInterval(G.tid);
+  G = makeGame(op, settings.size);
+  $('#menu').classList.add('hidden');
+  $('#game').classList.remove('hidden');
+  $('#opChip').textContent = `${OPS[op].sym} ${OPS[op].label}`;
+  $('#opChip').style.setProperty('--c', OPS[op].color);
+  $('#timer').textContent = fmt(0);
+  $('#gameBun').innerHTML = bunny('normal');
+  buildGrid(); renderPad(); setCur(0);
+  say(G.instant ? 'すうじを入れて「OK」をおしてね' : 'ぜんぶ書いたら 丸つけするよ', 2200);
+}
+
+function buildGrid() {
+  const n = G.size, g = $('#grid'), isDiv = G.op === 'div';
+  g.style.setProperty('--n', n + 1);
+  g.classList.toggle('big', n === 5);
+  let h = `<div class="hd corner" style="--c:${OPS[G.op].color}">${OPS[G.op].sym}</div>`;
+  G.tops.forEach((t, c) => h += `<div class="hd top-h${isDiv ? ' div' : ''}" data-c="${c}">${isDiv ? '÷' + t : t}</div>`);
+  for (let r = 0; r < n; r++) {
+    h += `<div class="hd left-h" data-r="${r}">${isDiv ? '🥕' : G.lefts[r]}</div>`;
+    for (let c = 0; c < n; c++) h += `<div class="cell" data-i="${r * n + c}"></div>`;
+  }
+  g.innerHTML = h;
+  G.els = [...g.querySelectorAll('.cell')];
+  G.cells.forEach((_, i) => paint(i));
+}
+
+function paint(i) {
+  const c = G.cells[i], el = G.els[i];
+  el.className = 'cell' + (i === G.cur && !G.done ? ' cur' : '') + (c.st ? ' ' + c.st : '') + (c.miss ? ' miss' : '');
+  let h = G.op === 'div' ? `<span class="dv">${c.a}</span>` : '';
+  h += `<span class="v">${c.val}</span>`;
+  if (c.st === 'ng' && G.done) h += `<span class="fix">${c.ans}</span>`;
+  el.innerHTML = h;
+}
+
+function setCur(i) {
+  const prev = G.cur; G.cur = i;
+  paint(prev); paint(i);
+  const c = G.cells[i];
+  document.querySelectorAll('.hd.on').forEach(e => e.classList.remove('on'));
+  if (!G.done) {
+    document.querySelector(`.hd.top-h[data-c="${c.c}"]`).classList.add('on');
+    document.querySelector(`.hd.left-h[data-r="${c.r}"]`).classList.add('on');
+    G.els[i].scrollIntoView({block: 'nearest', inline: 'nearest'});
+  }
+  updateQ();
+}
+
+function updateQ() {
+  const c = G.cells[G.cur];
+  $('#qtext').textContent = `${c.a} ${OPS[G.op].sym} ${c.b} =`;
+  const qa = $('#qans');
+  qa.textContent = c.val || '?';
+  qa.classList.toggle('empty', !c.val);
+  const total = G.cells.length;
+  const doneN = G.cells.filter(x => G.instant ? x.st === 'ok' : x.val !== '').length;
+  $('#prog').textContent = `${doneN}/${total}`;
+}
+
+function renderPad() {
+  const pad = $('#pad');
+  if (!G.done) {
+    pad.className = 'pad';
+    pad.innerHTML = [1, 2, 3, 4, 5].map(d => `<button data-k="${d}">${d}</button>`).join('') +
+      `<button class="del" data-k="del">けす</button>` +
+      [6, 7, 8, 9, 0].map(d => `<button data-k="${d}">${d}</button>`).join('') +
+      `<button class="ent" data-k="ent">OK</button>`;
+  } else {
+    const ng = G.cells.some(c => c.st === 'ng');
+    pad.className = 'pad done';
+    pad.innerHTML = `<button data-k="again" style="background:var(--mint)">もう一回</button>` +
+      (ng ? `<button data-k="retry" style="background:var(--pink)">まちがい<br>やり直し</button>` : `<button data-k="result" style="background:var(--yel)">けっか</button>`) +
+      `<button data-k="menu">メニュー</button>`;
+  }
+}
+$('#pad').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const k = b.dataset.k;
+  if (/^\d$/.test(k)) press(k);
+  else if (k === 'del') del();
+  else if (k === 'ent') submit();
+  else if (k === 'again') startGame(G.op);
+  else if (k === 'retry') retryWrong();
+  else if (k === 'result') showResult(G.lastResult);
+  else if (k === 'menu') goMenu();
+});
+$('#grid').addEventListener('click', e => {
+  const el = e.target.closest('.cell'); if (!el || !G || G.done) return;
+  setCur(+el.dataset.i);
+});
+$('#hintBtn').addEventListener('click', () => { if (G && !G.done) showHint(); });
+$('#backBtn').addEventListener('click', () => {
+  if (G && G.started && !G.done) confirmQuit(); else goMenu();
+});
+
+function startTimer() {
+  G.started = true;
+  G.t0 = performance.now() - G.elapsed;
+  clearInterval(G.tid);
+  G.tid = setInterval(() => { G.elapsed = performance.now() - G.t0; $('#timer').textContent = fmt(G.elapsed); }, 100);
+}
+function stopTimer() {
+  if (G.started) G.elapsed = performance.now() - G.t0;
+  clearInterval(G.tid);
+  $('#timer').textContent = fmt(G.elapsed);
+}
+
+function editable() { const c = G.cells[G.cur]; return !(G.instant && c.st === 'ok'); }
+function press(d) {
+  if (!G || G.done || !editable()) return;
+  if (!G.started) startTimer();
+  const c = G.cells[G.cur];
+  if (c.val.length >= 3) return;
+  c.val = (c.val === '0' ? '' : c.val) + d;
+  if (!G.instant) c.st = '';
+  paint(G.cur); updateQ();
+}
+function del() {
+  if (!G || G.done || !editable()) return;
+  const c = G.cells[G.cur];
+  c.val = c.val.slice(0, -1);
+  if (!G.instant) c.st = '';
+  paint(G.cur); updateQ();
+}
+function pending(j) { const c = G.cells[j]; return G.instant ? c.st !== 'ok' : c.val === ''; }
+function findNext() {
+  const N = G.cells.length;
+  for (let k = 1; k <= N; k++) { const j = (G.cur + k) % N; if (pending(j)) return j; }
+  return -1;
+}
+function advance() {
+  const nx = findNext();
+  paint(G.cur);
+  if (nx < 0) finish(); else setCur(nx);
+}
+function submit() {
+  if (!G || G.done) return;
+  const c = G.cells[G.cur];
+  if (!editable()) { advance(); return; }
+  if (c.val === '') { bounce($('#qans')); return; }
+  if (!G.started) startTimer();
+  if (G.instant) {
+    if (+c.val === c.ans) {
+      c.st = 'ok'; G.combo++;
+      bounce($('#gameBun'), 'hop');
+      if (G.combo % 10 === 0) say(`${G.combo}もん れんぞく せいかい！`);
+      else if (Math.random() < 0.18) say(rand(OK_MSG));
+      advance();
+    } else {
+      c.miss = true; G.combo = 0; c.val = '';
+      paint(G.cur); updateQ();
+      bounce(G.els[G.cur]); bounce($('#qans'));
+      say(rand(NG_MSG));
+    }
+  } else {
+    c.st = 'filled';
+    advance();
+  }
+}
+function bounce(el, cls = 'shake') {
+  el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+  setTimeout(() => el.classList.remove(cls), 400);
+}
+let sayTid = 0;
+function say(text, ms = 1500) {
+  const s = $('#say'); s.textContent = text; s.classList.add('show');
+  clearTimeout(sayTid); sayTid = setTimeout(() => s.classList.remove('show'), ms);
+}
+
+function finish() {
+  stopTimer();
+  G.done = true;
+  const total = G.cells.length;
+  let ok;
+  if (G.instant) {
+    ok = G.cells.filter(c => !c.miss).length;
+  } else {
+    G.cells.forEach(c => c.st = (+c.val === c.ans) ? 'ok' : 'ng');
+    ok = G.cells.filter(c => c.st === 'ok').length;
+  }
+  G.cells.forEach((_, i) => paint(i));
+  document.querySelectorAll('.hd.on').forEach(e => e.classList.remove('on'));
+  $('#gameBun').innerHTML = bunny('happy');
+  let newBest = false, prevBest = null;
+  if (!G.retry) {
+    const key = `${G.op}-${G.size}`;
+    prevBest = data.best[key] || null;
+    if (ok === total && (!prevBest || G.elapsed < prevBest)) { data.best[key] = Math.round(G.elapsed); newBest = true; }
+    data.plays++;
+    data.history.unshift({op: G.op, size: G.size, ok, total, time: Math.round(G.elapsed), date: Date.now()});
+    data.history = data.history.slice(0, 30);
+    saveData();
+  }
+  G.lastResult = {ok, total, time: G.elapsed, newBest, prevBest, retry: G.retry, instant: G.instant, hints: G.hints};
+  renderPad(); updateQ();
+  $('#qtext').textContent = G.retry ? 'やり直し おわり！' : 'おつかれさま！';
+  $('#qans').textContent = ''; $('#qans').classList.remove('empty');
+  showResult(G.lastResult);
+}
+
+function showResult(r) {
+  const ratio = r.ok / r.total;
+  let title, msg;
+  if (r.retry) { title = 'ぜんぶ なおせたね！'; msg = 'まちがえた問題も もうバッチリぴょん。'; }
+  else if (ratio === 1) { title = 'はなまる！パーフェクト！'; msg = 'ぜんぶ せいかい！ちーちゃん すごいぴょん！'; }
+  else if (ratio >= 0.8) { title = 'すごい！あとちょっと！'; msg = 'ほとんど せいかい！のこりも すぐできるよ。'; }
+  else if (ratio >= 0.5) { title = 'いい調子！'; msg = 'はんぶん以上 できたね。まちがいを なおしてみよう。'; }
+  else { title = 'さいごまで がんばったね！'; msg = 'やればやるほど はやくなるよ。25マスで れんしゅうもおすすめ。'; }
+  const okLabel = r.instant ? '一発せいかい' : 'せいかい';
+  const best = !r.retry && r.newBest ? `<div class="newbest">🏆 ベスト記録 こうしん！</div>` :
+    (!r.retry && r.prevBest ? `<p style="font-size:13px;color:var(--sub)">ベスト：${fmt(r.prevBest)}</p>` : '');
+  const canRetry = !r.retry && G.cells.some(c => c.st === 'ng');
+  openModal(`
+    <div class="sheet">
+      <div class="bun">${bunny('happy')}</div>
+      ${ratio === 1 && !r.retry ? HANAMARU : ''}
+      <h2>${title}</h2>
+      ${best}
+      <div class="stats">
+        <div><small>タイム</small><b>${fmtJa(r.time)}</b></div>
+        <div><small>${okLabel}</small><b>${r.ok}/${r.total}</b></div>
+      </div>
+      <p>${msg}</p>
+      ${!r.retry ? '<p style="font-size:13px;color:var(--sub)">にんじんスタンプを 1こ ゲット 🥕</p>' : ''}
+      <div class="btns">
+        ${canRetry ? '<button class="btn pinkb" data-a="retry">まちがいだけ やり直す</button>' : ''}
+        <button class="btn main" data-a="again">もう一回 やる</button>
+        <button class="btn" data-a="view">こたえを 見る</button>
+        <button class="btn" data-a="menu">メニューへ</button>
+      </div>
+    </div>`, a => {
+      if (a === 'retry') retryWrong();
+      else if (a === 'again') startGame(G.op);
+      else if (a === 'menu') goMenu();
+    });
+}
+
+function retryWrong() {
+  closeModal();
+  const wrong = G.cells.map((c, i) => c.st === 'ng' ? i : -1).filter(i => i >= 0);
+  if (!wrong.length) return;
+  wrong.forEach(i => { const c = G.cells[i]; c.val = ''; c.st = ''; c.miss = false; });
+  G.cells.forEach(c => { if (c.st === 'ok') c.miss = false; });
+  Object.assign(G, {done: false, retry: true, instant: true, started: false, elapsed: 0, combo: 0});
+  $('#timer').textContent = fmt(0);
+  $('#gameBun').innerHTML = bunny('normal');
+  renderPad();
+  G.cur = wrong[0];
+  G.cells.forEach((_, i) => paint(i));
+  setCur(wrong[0]);
+  say(`まちがえた ${wrong.length}もんを なおそう！`, 2200);
+}
+
+function hintText(c) {
+  const {a, b} = c;
+  switch (G.op) {
+    case 'add':
+      if (b === 0 || a === 0) return '0をたしても かずは かわらないよ。';
+      if (a + b === 10) return `${a}は あと${10 - a}で 10に なる かずだよ。たす数は${b}だから…？`;
+      if (a + b > 10 && a < 10 && b < 10) {
+        const need = 10 - a;
+        return `${a}は あと${need}で 10になるよ。${b}を ${need}と${b - need}に わけて、10と${b - need}を あわせると…？`;
+      }
+      return `${a}から ${b}こ かぞえてみよう。${a}→${a + 1}→${a + 2}…`;
+    case 'sub':
+      if (b === 0) return '0をひいても かずは かわらないよ。';
+      if (a >= 10 && b > a - 10) return `${a}を 10と${a - 10}に わけてみよう。10から${b}をひくと ${10 - b}。それに ${a - 10}を たすと…？`;
+      if (a >= 10) return `${a - 10}から${b}をひいて、そのあと 10をたそう。`;
+      return `${b}から ${a}まで いくつ あるかな？`;
+    case 'mul':
+      if (a === 0 || b === 0) return 'どっちかが 0なら、こたえは 0だよ。';
+      if (b === 1) return `${a}が 1こ だけ だから…？`;
+      if (a === 1) return `${b}が 1こ だけ だから…？`;
+      return `${a}×${b - 1}＝${a * (b - 1)} だよね。それに ${a}を たすと…？`;
+    case 'div':
+      return `「${b}×□＝${a}」の □を さがそう。${b}の段：${range(1, 4).map(k => b * k).join('、')}…`;
+  }
+}
+function showHint() {
+  G.hints++;
+  const c = G.cells[G.cur];
+  openModal(`<div class="sheet">
+      <div class="bun">${bunny('normal')}</div>
+      <h2>💡 ${c.a} ${OPS[G.op].sym} ${c.b}</h2>
+      <p>${hintText(c)}</p>
+      <div class="btns"><button class="btn main" data-a="close">わかった！</button></div>
+    </div>`);
+}
+
+function confirmQuit() {
+  openModal(`<div class="sheet">
+      <div class="bun">${bunny('normal')}</div>
+      <h2>とちゅうで やめる？</h2>
+      <p>ここまでの答えは きえちゃうよ。</p>
+      <div class="btns">
+        <button class="btn main" data-a="close">つづける</button>
+        <button class="btn" data-a="quit">やめて メニューへ</button>
+      </div></div>`, a => { if (a === 'quit') goMenu(); });
+}
+
+function goMenu() {
+  closeModal();
+  if (G) clearInterval(G.tid);
+  G = null;
+  $('#game').classList.add('hidden');
+  $('#menu').classList.remove('hidden');
+  renderMenu();
+  window.scrollTo(0, 0);
+}
+
+/* ---------- モーダル ---------- */
+function openModal(html, onAction) {
+  const root = $('#modalRoot');
+  root.innerHTML = `<div class="modal">${html}</div>`;
+  const m = root.firstElementChild;
+  m.addEventListener('click', e => {
+    const b = e.target.closest('[data-a]');
+    if (b) { const a = b.dataset.a; closeModal(); if (onAction) onAction(a); }
+    else if (e.target === m) closeModal();
+  });
+}
+function closeModal() { $('#modalRoot').innerHTML = ''; }
+
+/* ---------- PCキーボード ---------- */
+document.addEventListener('keydown', e => {
+  if (!G || $('#game').classList.contains('hidden')) return;
+  if ($('#modalRoot').firstElementChild) {
+    if (e.key === 'Escape' || e.key === 'Enter') { const m = $('#modalRoot [data-a]'); if (e.key === 'Escape') closeModal(); else if (m) m.click(); e.preventDefault(); }
+    return;
+  }
+  if (G.done) return;
+  if (/^[0-9]$/.test(e.key)) { press(e.key); e.preventDefault(); }
+  else if (e.key === 'Backspace' || e.key === 'Delete') { del(); e.preventDefault(); }
+  else if (e.key === 'Enter' || e.key === ' ') { submit(); e.preventDefault(); }
+  else if (e.key.startsWith('Arrow')) {
+    const n = G.size, r = G.cells[G.cur].r, c = G.cells[G.cur].c;
+    const d = {ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1]}[e.key];
+    const nr = Math.min(n - 1, Math.max(0, r + d[0])), nc = Math.min(n - 1, Math.max(0, c + d[1]));
+    setCur(nr * n + nc); e.preventDefault();
+  }
+});
+
+renderMenu();
+})();
+</script>
+</body>
+</html>
