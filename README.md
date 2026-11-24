@@ -2,7 +2,7 @@
 
 ちーちゃんの けいさん れんしゅう帳。うさぴょんと一緒に100マス計算ができるWebアプリです。
 
-**▶ あそぶ：https://jautokurosawa0501-lab.github.io/usapyon-100masu/**
+**▶ あそぶ：https://salacurtet-source.github.io/usapyon-100masu-/**
 
 ## できること
 
